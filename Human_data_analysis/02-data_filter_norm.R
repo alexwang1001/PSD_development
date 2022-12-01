@@ -28,11 +28,6 @@ ggplot(data = groupNumber, mapping = aes (x = condition, y = n)) +
        y = "Protein Identified")
 
 data_half_filt <- data_se[unique(keep$rowname), ]
-plot_missval(data_half_filt)
-plot_frequency(data_half_filt)
-plot_numbers(data_half_filt)
-plot_coverage(data_half_filt)
-
 
 #normalize data
 data_norm <- normalize_vsn(data_half_filt)
