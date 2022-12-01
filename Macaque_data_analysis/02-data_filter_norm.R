@@ -1,0 +1,104 @@
+library("DEP")
+library("SummarizedExperiment")
+library("limma")
+library("vsn")
+library("tidyverse")
+library("ComplexHeatmap")
+
+load(file = "./Results/data.RData")
+
+
+#how many proteins are found at each stage?
+#assign all match between runs values to 0
+plot_missval(data_se)
+
+
+data_unique <- read.csv(file = "Clean_Data/data_unique.csv")
+identification_method <- read.csv(file = "Clean_Data/Ident_method.csv")
+identification_method_unique <- identification_method %>% dplyr::semi_join(data_unique, by = "Protein.IDs")
+matched_idx <- identification_method_unique[,2:22] == "By matching"
+
+bin_data <- assay(data_se)
+idx <- is.na(assay(data_se))
+bin_data[!idx] <- 1
+bin_data[idx] <- 0
+sum(bin_data)
+bin_data[matched_idx] <- 0
+
+keep <- bin_data %>% data.frame() %>% rownames_to_column() %>% 
+  gather(ID, value, -rowname) %>% left_join(., data.frame(colData(data_se)), by = "ID") %>%
+  group_by(rowname, condition) %>%
+  summarize(miss_val = n() - sum(value), counts = n()) %>%
+  ungroup() %>% filter(miss_val <= counts/2) %>% ungroup()
+
+groupNumber <- keep %>% dplyr::count(condition)
+groupNumber$condition <- factor(groupNumber$condition,levels = c("E75_85", "E95_110", "Year0_1", "Year1_3", "Year8_10"))
+
+plot1 <- ggplot(data = groupNumber, mapping = aes (x = condition, y = n)) +
+  geom_col() +
+  theme_bw() +
+  theme(text=element_text(size=15)) +
+  labs(x = "Developmental Stages",
+       y = "Protein Number Identified")
+ggsave(filename = "Results/protein_number_identified.png", width = 5, height = 6, units = "in")
+
+keep2 <- keep %>% pivot_wider(id_cols = rowname ,names_from = condition, values_from = miss_val) %>% as.data.frame()
+rownames(keep2) <- keep2$rowname
+keep2 <- as.matrix(keep2[,-1])
+keep2[!is.na(keep2)] <- 1
+keep2[is.na(keep2)] <- 0
+condition <- colnames(keep2)[c(3,4,1,5,2)]
+
+#draw an UpSet plot
+m <- make_comb_mat(keep2, mode = "distinct", min_set_size = 50)
+m2 <- m[comb_size(m) > 30]
+
+pdf("Results/upSet_MSMSonly.pdf") 
+UpSet(m2, set_order = condition, comb_order = order(comb_size(m2), decreasing = TRUE), width = unit(2.5, "in"), height = unit(1, "in"))
+dev.off()
+
+
+
+
+
+#Next we performed similar analysis but include by-matching identifications.
+plot_missval(data_se)
+bin_data <- assay(data_se)
+idx <- is.na(assay(data_se))
+bin_data[!idx] <- 1
+bin_data[idx] <- 0
+
+#only include proteins that are detected in at least half of all samples in a given stage
+keep <- bin_data %>% data.frame() %>% rownames_to_column() %>% 
+  gather(ID, value, -rowname) %>%
+  left_join(., data.frame(colData(data_se)), by = "ID") %>%
+  group_by(rowname, condition) %>% summarize(miss_val = n() - sum(value), counts = n()) %>%
+  ungroup() %>% filter(miss_val <= counts/2) %>% ungroup()
+
+
+groupNumber <- keep %>% dplyr::count(condition)
+
+ggplot(data = groupNumber, mapping = aes (x = condition, y = n)) +
+  geom_col() +
+  theme_bw() +
+  theme(text=element_text(size=20)) +
+  labs(x = "Developmental Stages",
+       y = "Protein Identified")
+
+data_half_filt <- data_se[unique(keep$rowname), ]
+plot_missval(data_half_filt)
+plot_frequency(data_half_filt)
+plot_numbers(data_half_filt)
+plot_coverage(data_half_filt)
+
+
+#normalize data
+data_norm <- normalize_vsn(data_half_filt)
+
+#Imputation
+set.seed(6)
+data_imp <- impute(data_norm, fun = "MinProb", q = 0.01)
+plot_imputation(data_norm, data_imp)
+
+save(data_norm, file = "./Results/data_norm.RData")
+save(data_imp, file = "./Results/data_imp.RData")

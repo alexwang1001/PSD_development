@@ -1,0 +1,13 @@
+name: PSD_development_explorer
+title: PSD_development_explorer
+username:
+account: liwang
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 4938346
+bundleId: 6505095
+url: https://liwang.shinyapps.io/PSD_development_explorer/
+when: 1668224783.80636
+lastSyncTime: 1668224783.80637
+asMultiple: FALSE
+asStatic: FALSE
