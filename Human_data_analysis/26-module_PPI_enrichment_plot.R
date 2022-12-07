@@ -1,5 +1,132 @@
 library("tidyverse")
 
+## This code is to calculate the number of interactions in the random blue module PPI networks.
+
+## Calculate the degree of the background PPI network.
+
+library(igraph)
+
+data_network <- read.table("PPIN_background.txt", sep = "\t", colClasses = "character")
+
+data_network_1 <- graph.data.frame(data_network, directed = FALSE)
+
+data_degree <- degree(data_network_1)
+
+write.table(data_degree, file = "degree_background.txt", quote = FALSE, sep = "\t", row.names = TRUE, col.names = FALSE)
+
+## Generate the degree distribution of the background PPI network for randomization.
+
+data_degree <- read.table("degree_background.txt", sep = "\t")
+
+data_degree[data_degree[,2]>=200,2] <- 200
+
+data_degree[(data_degree[,2]>=100)&(data_degree[,2]<200),2] <- 100
+
+data_degree[(data_degree[,2]>=70)&(data_degree[,2]<100),2] <- 70
+
+data_degree[(data_degree[,2]>=50)&(data_degree[,2]<70),2] <- 50
+
+data_degree[(data_degree[,2]>=40)&(data_degree[,2]<50),2] <- 40
+
+data_degree[(data_degree[,2]>=30)&(data_degree[,2]<40),2] <- 30
+
+data_degree[(data_degree[,2]>=20)&(data_degree[,2]<30),2] <- 20
+
+data_degree[(data_degree[,2]>=10)&(data_degree[,2]<20),2] <- 10
+
+data_degree[data_degree[,2]<10,2] <- 1
+
+write.table(data_degree, file = "degree_background_1.txt", quote = FALSE, sep = "\t", row.names = FALSE, col.names = FALSE)
+
+## Calculate the degree of the blue module proteins in the background PPI network.
+
+data_degree <- read.table("degree_background_1.txt", sep = "\t", colClasses = "character")
+
+data_protein <- read.table("gene_blue.txt", sep = "\t", colClasses = "character")
+
+data_degree_1 <- merge(data_degree, data_protein, by = 1)
+
+write.table(data_degree_1[,2], file = "degree.txt", quote = FALSE, sep = "\t", row.names = FALSE, col.names = FALSE)
+
+## Generate the degree distribution of the blue module proteins for randomization.
+
+data_degree <- scan("degree.txt", sep = "\t")
+
+data_degree_1 <- unique(data_degree)
+
+data_degree_1 <- sort(data_degree_1)
+
+data_degree_2 <- numeric(length = length(data_degree_1))
+
+for (i in 1:length(data_degree_1))
+{
+  data_degree_3 <- data_degree[data_degree==data_degree_1[i]]
+  
+  data_degree_2[i] <- length(data_degree_3)
+}
+
+data_degree_4 <- data.frame(data_degree_1, data_degree_2)
+
+write.table(data_degree_4, file = "degree_1.txt", quote = FALSE, sep = "\t", row.names = FALSE, col.names = FALSE)
+
+## Calculate the random numbers of interactions of the blue module PPI network.
+
+data_network <- read.table("PPIN_background.txt", sep = "\t", colClasses = "character")
+
+data_degree <- read.table("degree_background_1.txt", sep = "\t", colClasses = "character")
+
+data_degree_1 <- read.table("degree_1.txt", sep = "\t", colClasses = "character")
+
+data_edge <- numeric(length = 10000)
+
+set.seed(100000000)
+
+for (i in 1:100000)
+{
+  for (j in 1:nrow(data_degree_1))
+  {
+    data_degree_2 <- data_degree[data_degree[,2]==data_degree_1[j,1],]
+    
+    data_protein <- sample(data_degree_2[,1], data_degree_1[j,2])
+    
+    write.table(data_protein, file = "protein_random.txt", append = TRUE, quote = FALSE, sep = "\t", row.names = FALSE, col.names = FALSE)
+  }
+  
+  data_protein_1 <- read.table("protein_random.txt", sep = "\t", colClasses = "character")
+  
+  data_network_1 <- merge(data_network, data_protein_1, by = 1)
+  
+  data_network_2 <- data_network_1[,2:1]
+  
+  data_network_3 <- merge(data_network_2, data_protein_1, by = 1)
+  
+  data_edge[i] <- nrow(data_network_3)
+  
+  file.remove("protein_random.txt")
+}
+
+write.table(data_edge, file = "edge_number_random.txt", quote = FALSE, sep = "\t", row.names = FALSE, col.names = FALSE)
+
+## Calculate the observed number of interactions of the blue module PPI network.
+
+data_network <- read.table("PPIN_background.txt", sep = "\t", colClasses = "character")
+
+data_protein <- read.table("gene_blue.txt", sep = "\t", colClasses = "character")
+
+data_network_1 <- merge(data_network, data_protein, by = 1)
+
+data_network_2 <- data_network_1[,2:1]
+
+data_network_3 <- merge(data_network_2, data_protein, by = 1)
+
+data_edge <- nrow(data_network_3)
+
+write.table(data_edge, file = "edge_number_blue.txt", quote = FALSE, sep = "\t", row.names = FALSE, col.names = FALSE)
+
+
+
+
+##########################################################
 #brown module
 brown_random <- read.table(file = "Results/PPI_network/Module_PPI_edge_number_enrichment_permutation/brown_edge_number_random.txt",
                          header = F)
@@ -76,5 +203,90 @@ ggplot(grey_random, aes(x=Edge_number)) +
 ggsave("Results/PPI_network/results/enrichment/grey_PPI_enrichment.pdf", width = 6, height = 4, units = "in")
 
 
+###########################################################################
 
+## This code is to calculate the shortest path lengths within the axon pathway proteins as well as those between the axon pathway proteins and non-pathway proteins in the blue module network.
 
+## Extract the axon pathway proteins from the blue module.
+
+library(igraph)
+
+data_pathway <- read.table("blue_pathway.csv", sep = ",", colClasses = "character", skip = 1)
+
+data_pathway <- data_pathway[data_pathway[,3]=="1",]
+
+data_protein <- data_pathway[,1]
+
+data_protein <- unique(data_protein)
+
+data_protein <- sort(data_protein)
+
+write.table(data_protein, file = "axon.txt", quote = FALSE, sep = "\t", row.names = FALSE, col.names = FALSE)
+
+## Generate the largest connected component of the blue module network.
+
+data_network <- read.table("blue_network.csv", sep = ",", colClasses = "character")
+
+data_network <- unique(data_network)
+
+data_network <- data_network[data_network[,1]!=data_network[,2],]
+
+data_network_1 <- data_network[data_network[,1]<data_network[,2],]
+
+data_network_2 <- data_network[data_network[,1]>data_network[,2],]
+
+data_network_3 <- data_network_2[,2:1]
+
+write.table(data_network_1, file = "blue_network_1.txt", quote = FALSE, sep = "\t", row.names = FALSE, col.names = FALSE)
+
+write.table(data_network_3, file = "blue_network_1.txt", append = TRUE, quote = FALSE, sep = "\t", row.names = FALSE, col.names = FALSE)
+
+data_network_4 <- read.table("blue_network_1.txt", sep = "\t", colClasses = "character")
+
+data_network_4 <- unique(data_network_4)
+
+data_network_4 <- data_network_4[ do.call(order, data_network_4) ,]
+
+write.table(data_network_4, file = "blue_network_2.txt", quote = FALSE, sep = "\t", row.names = FALSE, col.names = FALSE)
+
+data_network <- read.table("blue_network_2.txt", sep = "\t", colClasses = "character")
+
+data_network_1 <- graph.data.frame(data_network, directed = FALSE)
+
+data_cluster <- clusters(data_network_1)
+
+data_LCC <- which(which.max(data_cluster$csize)==data_cluster$membership)
+
+data_network_2 <- induced.subgraph(data_network_1, data_LCC)
+
+write.graph(data_network_2, "blue_network_3.txt", format = "ncol")
+
+## Calculate the shortest path lengths within the axon pathway proteins as well as those between the axon pathway proteins and non-pathway proteins in the largest connected component.
+
+data_network <- read.table("blue_network_3.txt", sep = " ", colClasses = "character")
+
+data_network_1 <- graph.data.frame(data_network, directed = FALSE)
+
+data_protein_network <- scan("blue_network_3.txt", what = "character", sep = " ")
+
+data_protein_pathway <- scan("axon.txt", what = "character", sep = "\t")
+
+data_protein_pathway <- intersect(data_protein_pathway, data_protein_network)
+
+data_protein_pathway <- unique(data_protein_pathway)
+
+data_protein_pathway <- sort(data_protein_pathway)
+
+data_protein_network <- setdiff(data_protein_network, data_protein_pathway)
+
+data_protein_network <- unique(data_protein_network)
+
+data_protein_network <- sort(data_protein_network)
+
+data_SPL <- shortest.paths(data_network_1, v=data_protein_pathway, to=data_protein_pathway)
+
+write.table(data_SPL, file = "SPL_axon_axon.txt", quote = FALSE, sep = "\t", row.names = TRUE, col.names = TRUE)
+
+data_SPL_1 <- shortest.paths(data_network_1, v=data_protein_pathway, to=data_protein_network)
+
+write.table(data_SPL_1, file = "SPL_axon_others.txt", quote = FALSE, sep = "\t", row.names = TRUE, col.names = TRUE)
