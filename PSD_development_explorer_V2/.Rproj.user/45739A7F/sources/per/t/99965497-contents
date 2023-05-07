@@ -4,7 +4,8 @@ library("SummarizedExperiment")
 options(repos = BiocManager::repositories())
 
 source("helpers.R")
-human_dep <- readRDS("data/human_dep.rds")
+human_PFC_dep <- readRDS("data/human_PFC_dep.rds")
+human_V1_dep <- readRDS("data/human_V1_dep.rds")
 macaque_dep <- readRDS("data/macaque_dep.rds")
 mouse_dep <- readRDS("data/mouse_dep.rds")
 
@@ -28,7 +29,10 @@ ui <- fluidPage(
       selectizeInput('macaque_protein', label = "Macaque protein symbol", choices = NULL, multiple = TRUE),
       selectizeInput('mouse_protein', label = "Mouse protein symbol", choices = NULL, multiple = TRUE),
       # Button
-      downloadButton("download_human_selected", "Download_human_selected"),
+      downloadButton("download_human_PFC_selected", "Download_human_PFC_selected"),
+      br(),
+      br(),
+      downloadButton("download_human_V1_selected", "Download_human_V1_selected"),
       br(),
       br(),
       downloadButton("download_macaque_selected", "Download_macaque_selected"),
@@ -45,8 +49,11 @@ ui <- fluidPage(
       width = 5
     ),
     mainPanel(
-      textOutput("human_text"),
-      plotOutput("human_plot", width = 420, height = 240),
+      textOutput("human_PFC_text"),
+      plotOutput("human_PFC_plot", width = 420, height = 240),
+      br(),
+      textOutput("human_V1_text"),
+      plotOutput("human_V1_plot", width = 420, height = 240),
       br(),
       textOutput("macaque_text"),
       plotOutput("macaque_plot", width = 420, height = 240),
@@ -75,16 +82,30 @@ server <- function(input, output, session) {
     mouse_input[mouse_input$Input %in% input$mouse_protein,]
   })
   # Output texts and plots for selected genes ----
-  output$human_text <- renderText({
+  output$human_PFC_text <- renderText({
     if (length(human_protein_table()$SYMBOL) != 0) {
-      paste0("Human PSD - ", paste(human_protein_table()$SYMBOL, collapse = ", "))
+      paste0("Human PFC PSD - ", paste(human_protein_table()$SYMBOL, collapse = ", "))
     } else {
       "No human PSD protein selected"
     }
   })
-  output$human_plot <- renderPlot({
+  output$human_PFC_plot <- renderPlot({
      if (length(human_protein_table()$SYMBOL) != 0) {
-      plot_human(human_dep, human_protein_table()$SYMBOL) + guides(color = guide_legend(override.aes = list(size = 3)))
+       plot_human_PFC(human_PFC_dep, human_protein_table()$SYMBOL) + guides(color = guide_legend(override.aes = list(size = 3)))
+    } else {
+      plot.new()
+    }
+  })
+  output$human_V1_text <- renderText({
+    if (length(human_protein_table()$SYMBOL) != 0) {
+      paste0("Human V1 PSD - ", paste(human_protein_table()$SYMBOL, collapse = ", "))
+    } else {
+      "No human PSD protein selected"
+    }
+  })
+  output$human_V1_plot <- renderPlot({
+    if (length(human_protein_table()$SYMBOL) != 0) {
+      plot_human_V1(human_V1_dep, human_protein_table()$SYMBOL) + guides(color = guide_legend(override.aes = list(size = 3)))
     } else {
       plot.new()
     }
@@ -118,14 +139,27 @@ server <- function(input, output, session) {
     }
   })
   # Downloadable csv of selected dataset ----
-  output$download_human_selected <- downloadHandler(
+  output$download_human_PFC_selected <- downloadHandler(
     filename = function() {
-      "Human_dataset_selected.csv"
+      "Human_PFC_dataset_selected.csv"
     },
     content = function(file) {
       if (length(human_protein_table()$SYMBOL) != 0) {
-        human_dataset <- get_dataset(human_dep, human_protein_table()$SYMBOL)
-        write.csv(human_dataset, file, row.names = FALSE)
+        human_PFC_dataset <- get_dataset(human_PFC_dep, human_protein_table()$SYMBOL)
+        write.csv(human_PFC_dataset, file, row.names = FALSE)
+      } else {
+        NULL
+      }
+    }
+  )
+  output$download_human_V1_selected <- downloadHandler(
+    filename = function() {
+      "Human_V1_dataset_selected.csv"
+    },
+    content = function(file) {
+      if (length(human_protein_table()$SYMBOL) != 0) {
+        human_V1_dataset <- get_dataset(human_V1_dep, human_protein_table()$SYMBOL)
+        write.csv(human_V1_dataset, file, row.names = FALSE)
       } else {
         NULL
       }

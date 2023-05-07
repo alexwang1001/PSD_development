@@ -1,7 +1,7 @@
 library("tidyverse")
 library("SummarizedExperiment")
 library("DEP")
-library("biomaRt")
+library(biomaRt)
 
 #load data
 load(file = "../Human PSD filtered by non post-mortem tissue/Results/dep_corrected.RData")
@@ -18,7 +18,7 @@ mouse_dep <- dep
 mouse_rowdata <- as.data.frame(rowData(mouse_dep))
 
 ############################################################
-#identify homologous genes and proteins
+#identify homologs
 ensembl <- useMart("ensembl")
 datasets <- listDatasets(ensembl)
 human <-  useMart(biomart="ensembl", dataset = "hsapiens_gene_ensembl", verbose = TRUE, host = "dec2021.archive.ensembl.org")
@@ -120,6 +120,7 @@ human_assay <- assay(human_dep_subset)
 macaque_assay <- assay(macaque_dep_subset)
 mouse_assay <- assay(mouse_dep_subset)
 assay <- cbind(human_assay, macaque_assay, mouse_assay)
+
 #coldata
 human_coldata <- as.data.frame(colData(human_dep))[,c("label", "condition","replicate", "AgeDays", "Log2AgeDays")]
 colnames(human_coldata) <- c("label", "condition","replicate", "age", "log2_age_days")

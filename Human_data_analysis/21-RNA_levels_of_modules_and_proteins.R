@@ -1,10 +1,11 @@
-library("tidyverse")
-library("SummarizedExperiment")
-library("GenomicRanges")
-library("patchwork")
+library(tidyverse)
+library(SummarizedExperiment)
+library(GenomicRanges)
+library(patchwork)
 
 
 se <- readRDS("Results/Human_NCX_subset_transcriptomics_PSD_logTPM.rds")
+
 #calculate median values of each module and standardize it
 get_scaled_median_for_modules <- function(se) {
   rowdata<- rowData(se)
@@ -41,12 +42,12 @@ ggplot(data = module_median_long, mapping = aes(x = log2_age_days, y = median, c
         axis.title = element_text(size=14) ) +
   geom_vline(xintercept = 8.0552824355) +
   labs(x = "Post-conceptional age (log-transformed)",
-       y = "Scaled expression") +
+       y = "Standardized expression") +
   scale_color_manual(values = c("blue","brown","turquoise","gold")) +
   scale_fill_manual(values = c("blue","brown","turquoise","gold")) +
   scale_x_continuous(breaks = c(6.8073549221,7.1996723448,8.0552824355,9.30149619498,10.7532167492,11.6375305515,12.885315061), labels = c("GW18", "GW23", "Birth", "Year01", "Year04", "Year08", "Year20"))
 
-ggsave("Results/RNA-seq/normalized_scaled_median.pdf", width = 6, height = 4)
+ggsave("Results/RNA-seq/standardized_median.pdf", width = 6, height = 4)
 
 
 #several examples showing the difference between RNA and Protein

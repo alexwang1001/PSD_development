@@ -13,7 +13,7 @@ rownames(odds2) <- odds$Description
 pvalue <- res %>% mutate (`-log10(p.adj)` = -log10(p.adjust)) %>% dplyr::select(Cluster, Description, `-log10(p.adj)`)
 mat <- spread(pvalue, key = Cluster, value = `-log10(p.adj)`)
 mat2 <- mat[,c(5,3,2,4)]
-rownames(mat2) <- mat$Description
+rownames(mat2) <- c("Down_in_ASD", "Up_in_ASD", "Down_in_BPD", "Up_in_BPD", "Down_in_MDD", "Up_in_MDD", "Down_in_SCZ", "Up_in_SCZ")
 
 ha <- HeatmapAnnotation(Modules = letters[1:4],
                         col = list(Modules = c("a" = "brown", "b" = "blue", "c" = "turquoise", "d" = "gold")),
@@ -42,6 +42,8 @@ ht1 <- Heatmap(mat2,
         clustering_distance_rows = "euclidean",
         clustering_method_rows = "complete",
         show_column_names = TRUE,
+        row_split = rep(c("Down", "Up"),4),
+        row_gap = unit(0.5, "cm"),
         top_annotation = ha,
         heatmap_legend_param = list(
                 title = "p.adj",
@@ -55,7 +57,7 @@ ht1 <- Heatmap(mat2,
 )
 
 mat3 <- as.matrix(mat$all)
-rownames(mat3) <- mat$Description
+rownames(mat3) <- c("Down_in_ASD", "Up_in_ASD", "Down_in_BPD", "Up_in_BPD", "Down_in_MDD", "Up_in_MDD", "Down_in_SCZ", "Up_in_SCZ")
 colnames(mat3) <- "all"
 ht2 <- Heatmap(mat3,
                col = col_fun, 
@@ -81,6 +83,6 @@ ht2 <- Heatmap(mat3,
 ht_list <- ht1+ht2
 draw(ht_list, heatmap_legend_side = "top", ht_gap = unit(0.5, "cm"))
 
-pdf(file = "Results/differential_expression_in_psychiatric_disorder/NDD_diff_ORA_heatmap.pdf", width = 6.5, height = 5)
+pdf(file = "Results/differential_expression_in_psychiatric_disorder/NDD_diff_ORA_heatmap.pdf", width = 5, height = 4.5)
 draw(ht_list, heatmap_legend_side = "top", ht_gap = unit(0.5, "cm"))
 dev.off()

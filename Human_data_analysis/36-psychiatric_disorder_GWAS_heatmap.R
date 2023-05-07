@@ -96,6 +96,6 @@ ht2 <- Heatmap(mat3,
 ht_list <- ht1+ht2
 draw(ht_list, heatmap_legend_side = "top", ht_gap = unit(0.5, "cm"))
 
-pdf(file = "Results/psychiatric_disorder/NDD_GWAS_heatmap.pdf", width = 6, height = 3.5)
+pdf(file = "Results/psychiatric_disorder/NDD_GWAS_heatmap.pdf", width = 6, height = 4)
 draw(ht_list, heatmap_legend_side = "top", ht_gap = unit(0.5, "cm"))
 dev.off()
