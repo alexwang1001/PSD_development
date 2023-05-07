@@ -1,6 +1,6 @@
 library("DEP")
 library("SummarizedExperiment")
-library(ComplexHeatmap)
+library("ComplexHeatmap")
 library("limma")
 library("vsn")
 library("tidyverse")
