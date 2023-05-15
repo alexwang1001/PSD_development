@@ -231,7 +231,7 @@ ggsave(filename = "Results/protein_examples/FigS2.pdf", width = 10, height = 12,
 library(patchwork)
 p1 <- plot_single2(dep_corrected, proteins = c("RPL3", "RPL12", "RPL10", "RPL13A", "RPL14", "RPL24")) + guides(color = guide_legend(override.aes = list(size = 4))) + theme(legend.position="top")
 p2 <- plot_single2(dep_corrected, proteins = c("CTNNA1", "CTNNA2", "CTNNB1", "CTNND1", "CTNND2")) + guides(color = guide_legend(override.aes = list(size = 4), nrow=2)) + theme(legend.position="top")
-p3 <- plot_single2(dep_corrected, proteins = c("TRIO", "ABR","ARHGEF2", "PREX1")) + guides(col = guide_legend(nrow=2)) + guides(color = guide_legend(override.aes = list(size = 4))) + theme(legend.position="top")
+p3 <- plot_single2(dep_corrected, proteins = c("TRIO", "RASGRF2","ARHGEF2", "PREX1")) + guides(col = guide_legend(nrow=2)) + guides(color = guide_legend(override.aes = list(size = 4))) + theme(legend.position="top")
 p4 <- plot_single2(dep_corrected, proteins = c("GRIA1", "GRIA2", "GRIA3", "GRIA4")) + guides(color = guide_legend(override.aes = list(size = 4))) + theme(legend.position="top")
 p1+p2+p3+p4
 ggsave(filename = "Results/protein_examples/all_GSEA.pdf", width = 8, height = 8, units = "in")
